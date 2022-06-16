@@ -1,7 +1,7 @@
-import { useId, useState } from "react";
+import { useEffect, useState } from "react";
 import ErrorForm from "./ErrorForm";
 
-const Formulario = ({ setPatients, patients }) => {
+const Formulario = ({ setPatients, patients = [], patientForm }) => {
   const initialState = {
     nombre: "",
     propietario: "",
@@ -9,11 +9,17 @@ const Formulario = ({ setPatients, patients }) => {
     fecha: "",
     sintomas: "",
   };
-
   const [stateForm, setStateForm] = useState(initialState);
   const [emptyForm, setIsEmpty] = useState(false);
 
   const { nombre, email, fecha, propietario, sintomas } = stateForm;
+
+  useEffect(() => {
+    if (Object.keys(patientForm).length > 0) {
+      setStateForm(patientForm);
+    }
+    console.log(patientForm.id);
+  }, [patientForm]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -26,19 +32,27 @@ const Formulario = ({ setPatients, patients }) => {
       !sintomas.trim()
     ) {
       setIsEmpty(true);
+      return;
+    }
+    setIsEmpty(false);
+    if (patientForm.id) {
+      const updatePatients = patients.map((patient) =>
+        stateForm.id === patient.id ? stateForm : patient
+      );
+      setPatients(updatePatients);
     } else {
-      setIsEmpty(false);
       const newPatient = {
         ...stateForm,
         id: generateId(),
       };
       setPatients([...patients, newPatient]);
-      localStorage.setItem("patients", JSON.stringify([...patients, newPatient]));
-      setStateForm(initialState);
     }
+    setStateForm(initialState);
   };
 
-  const generateId = () => Math.random().toString(36) + Date.now().toString(36);
+  const generateId = () => {
+    return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  };
 
   const handleInputChange = (e) => {
     setStateForm({
@@ -146,8 +160,8 @@ const Formulario = ({ setPatients, patients }) => {
         </div>
         <input
           type="submit"
-          value="Agregar Paciente"
-          className="bg-indigo-400 text-white font-bold w-full p-3 rounded cursor-pointer hover:bg-indigo-500 transition-all"
+          value={patientForm.id ? "Editar Paciente" : "Añadir Paciente"}
+          className="bg-indigo-500 text-white font-bold w-full p-3 rounded cursor-pointer text-base hover:bg-indigo-700 transition-all"
           onClick={handleSubmit}
         />
       </form>
